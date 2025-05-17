@@ -1,0 +1,267 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+if not Player then
+    print("Waiting for LocalPlayer...")
+    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+    Player = Players.LocalPlayer
+end
+
+local success, PlayerGui = pcall(function()
+    return Player:WaitForChild("PlayerGui", 5)
+end)
+if not success or not PlayerGui then
+    warn("Failed to find PlayerGui:", PlayerGui)
+    return
+end
+
+print("Starting InfSlimeGUI script...")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "InfSlimeGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Parent = PlayerGui
+print("ScreenGui created and parented to PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 280, 0, 180)
+Frame.Position = UDim2.new(0.5, -140, 0.5, -90)
+Frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Frame.BackgroundTransparency = 0.1
+Frame.BorderSizePixel = 0
+Frame.Parent = ScreenGui
+Frame.ClipsDescendants = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = Frame
+
+local Shadow = Instance.new("ImageLabel")
+Shadow.Size = UDim2.new(1, 20, 1, 20)
+Shadow.Position = UDim2.new(0, -10, 0, -10)
+Shadow.BackgroundTransparency = 1
+Shadow.Image = "rbxassetid://1316045217"
+Shadow.ImageTransparency = 0.7
+Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+Shadow.ScaleType = Enum.ScaleType.Slice
+Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+Shadow.Parent = Frame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.6, 0, 0, 40)
+Title.Position = UDim2.new(0.2, 0, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "Infinite Slime"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 22
+Title.Font = Enum.Font.GothamBlack
+Title.TextXAlignment = Enum.TextXAlignment.Center
+Title.Parent = Frame
+
+local Credits = Instance.new("TextLabel")
+Credits.Size = UDim2.new(1, 0, 0, 20)
+Credits.Position = UDim2.new(0, 0, 1, -30)
+Credits.BackgroundTransparency = 1
+Credits.Text = "Credits: lol1k.xyz"
+Credits.TextColor3 = Color3.fromRGB(150, 150, 150)
+Credits.TextSize = 12
+Credits.Font = Enum.Font.Gotham
+Credits.TextXAlignment = Enum.TextXAlignment.Center
+Credits.Parent = Frame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 220, 0, 50)
+ToggleButton.Position = UDim2.new(0.5, -110, 0, 60)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+ToggleButton.Text = "Toggle OFF"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 16
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Parent = Frame
+
+local ToggleButtonCorner = Instance.new("UICorner")
+ToggleButtonCorner.CornerRadius = UDim.new(0, 8)
+ToggleButtonCorner.Parent = ToggleButton
+
+local HideButton = Instance.new("TextButton")
+HideButton.Size = UDim2.new(0, 30, 0, 30)
+HideButton.Position = UDim2.new(1, -40, 0, 10)
+HideButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+HideButton.Text = "-"
+HideButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+HideButton.TextSize = 20
+HideButton.Font = Enum.Font.GothamBold
+HideButton.Parent = Frame
+
+local HideButtonCorner = Instance.new("UICorner")
+HideButtonCorner.CornerRadius = UDim.new(0, 6)
+HideButtonCorner.Parent = HideButton
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -80, 0, 10)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = Frame
+
+local CloseButtonCorner = Instance.new("UICorner")
+CloseButtonCorner.CornerRadius = UDim.new(0, 6)
+CloseButtonCorner.Parent = CloseButton
+
+print("GUI elements created successfully")
+
+local isDragging = false
+local dragStart = nil
+local startPos = nil
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isDragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+        print("Dragging started")
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        if isDragging then
+            TweenService:Create(Frame, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Position = Frame.Position
+            }):Play()
+            print("Dragging ended")
+        end
+        isDragging = false
+    end
+end)
+
+local function applyHoverEffect(button)
+    button.MouseEnter:Connect(function()
+        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = button.BackgroundColor3:lerp(Color3.fromRGB(255, 255, 255), 0.15)
+        }):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        local originalColor = button.Name == "ToggleButton" and (isToggled and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(0, 170, 255)) or
+                              button.Name == "HideButton" and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(200, 50, 50)
+        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = originalColor
+        }):Play()
+    end)
+end
+
+applyHoverEffect(ToggleButton)
+applyHoverEffect(HideButton)
+applyHoverEffect(CloseButton)
+
+local isHidden = false
+HideButton.MouseButton1Click:Connect(function()
+    isHidden = not isHidden
+    HideButton.Text = isHidden and "+" or "-"
+    local targetSize = isHidden and UDim2.new(0, 280, 0, 50) or UDim2.new(0, 280, 0, 180)
+    local targetTransparency = isHidden and 1 or 0
+    TweenService:Create(Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = targetSize,
+        BackgroundTransparency = 0.1
+    }):Play()
+    for _, child in pairs(Frame:GetChildren()) do
+        if child:IsA("GuiObject") and child ~= Title and child ~= HideButton and child ~= CloseButton and child ~= Shadow and child ~= Credits then
+            TweenService:Create(child, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundTransparency = targetTransparency,
+                TextTransparency = targetTransparency
+            }):Play()
+        end
+    end
+    TweenService:Create(Credits, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 1,
+        TextTransparency = isHidden and 1 or 0
+    }):Play()
+    print("GUI " .. (isHidden and "hidden" or "shown"))
+end)
+
+CloseButton.MouseButton1Click:Connect(function()
+    TweenService:Create(Frame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 0, 0, 0)
+    }):Play()
+    for _, child in pairs(Frame:GetChildren()) do
+        if child:IsA("GuiObject") then
+            TweenService:Create(child, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                BackgroundTransparency = 1,
+                TextTransparency = 1,
+                ImageTransparency = 1
+            }):Play()
+        end
+    end
+    wait(0.3)
+    ScreenGui:Destroy()
+    print("GUI closed")
+end)
+
+local isToggled = false
+local Remote = nil
+local success, err = pcall(function()
+    Remote = ReplicatedStorage:WaitForChild("Remotes", 5):WaitForChild("TycoonSystem", 5):WaitForChild("UpdateXPValue", 5)
+end)
+if not success or not Remote then
+    warn("Failed to find UpdateXPValue remote:", err)
+end
+
+ToggleButton.MouseButton1Click:Connect(function()
+    isToggled = not isToggled
+    ToggleButton.Text = isToggled and "Toggle ON" or "Toggle OFF"
+    TweenService:Create(ToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundColor3 = isToggled and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(0, 170, 255)
+    }):Play()
+    
+    if isToggled and Remote then
+        spawn(function()
+            print("Toggle loop started")
+            while isToggled do
+                local args = {90000000000}
+                local success, err = pcall(function()
+                    Remote:FireServer(unpack(args))
+                end)
+                if not success then
+                    warn("Error firing remote: " .. tostring(err))
+                    isToggled = false
+                    ToggleButton.Text = "Toggle OFF"
+                    TweenService:Create(ToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                        BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+                    }):Play()
+                    print("Toggle loop stopped due to error")
+                    break
+                end
+                wait()
+            end
+            print("Toggle loop ended")
+        end)
+    elseif isToggled and not Remote then
+        warn("Cannot start toggle: Remote not found")
+        isToggled = false
+        ToggleButton.Text = "Toggle OFF"
+        TweenService:Create(ToggleButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+        }):Play()
+    end
+end)
